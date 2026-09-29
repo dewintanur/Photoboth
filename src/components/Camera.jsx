@@ -4,6 +4,7 @@ function Camera({ selectedFrame, onBack, onFinish }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [photos, setPhotos] = useState([]);
   const [countdown, setCountdown] = useState(null);
@@ -210,7 +211,39 @@ function Camera({ selectedFrame, onBack, onFinish }) {
   // ==============================
   // RENDER
   // ==============================
+  const handleGalleryUpload = (event) => {
+    const files = Array.from(event.target.files);
 
+    if (!files.length) return;
+
+    // Slot yang masih tersedia
+    const remainingSlots = 3 - photos.length;
+
+    const selectedFiles = files.slice(0, remainingSlots);
+
+    selectedFiles.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        setPhotos((previous) => {
+          if (previous.length >= 3) {
+            return previous;
+          }
+
+          return [...previous, e.target.result];
+        });
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    // supaya file yang sama bisa dipilih lagi
+    event.target.value = "";
+  };
   return (
     <main className="booth-page">
       {/* ==========================
@@ -383,6 +416,8 @@ function Camera({ selectedFrame, onBack, onFinish }) {
         ========================== */}
 
         <div className="booth-actions">
+          {/* TAKE PHOTO / CREATE PHOTO */}
+
           {photos.length < 3 ? (
             <button
               type="button"
@@ -401,6 +436,30 @@ function Camera({ selectedFrame, onBack, onFinish }) {
               CREATE MY PHOTO
               <span>→</span>
             </button>
+          )}
+
+          {/* UPLOAD DARI GALLERY */}
+
+          {photos.length < 3 && (
+            <>
+              <button
+                type="button"
+                className="gallery-button"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                UPLOAD FROM GALLERY
+                <span>＋</span>
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={handleGalleryUpload}
+              />
+            </>
           )}
 
           {/* START OVER */}
