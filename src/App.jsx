@@ -29,6 +29,32 @@ const frames = [
     name: "Vintage Flower",
     image: "/frames/frame5.png",
   },
+  {
+    id: 6,
+    name: "Vintage Red",
+    image: "/frames/frame6.png",
+  },
+  {
+    id: 7,
+    name: "Brown Rock",
+    image: "/frames/frame7.png",
+  },
+  {
+    id: 8,
+    name: "Meow",
+    image: "/frames/frame8.png",
+  },
+  {
+    id: 9,
+    name: "Orange Picnic",
+    image: "/frames/frame9.png",
+  },
+  {
+    id: 10,
+    name: "Broken White",
+    image: "/frames/frame10.png",
+  },
+
 ];
 
 function App() {
