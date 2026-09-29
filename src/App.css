@@ -1282,3 +1282,211 @@ a {
     padding: 13px;
   }
 }
+/* ==========================================
+   MOBILE CAMERA + SHOTS SIDE BY SIDE
+========================================== */
+
+@media (max-width: 650px) {
+
+  .booth-container {
+    width: 100%;
+    padding: 16px 0 30px;
+  }
+
+  /* =========================
+     CAMERA + RESULTS
+  ========================= */
+
+  .capture-layout {
+    width: calc(100% - 32px);
+    max-width: 340px;
+
+    margin: 0 auto;
+
+    display: grid;
+
+    /* kamera lebih besar,
+       hasil foto kecil di kanan */
+    grid-template-columns: minmax(0, 1fr) 72px;
+
+    gap: 9px;
+
+    align-items: stretch;
+  }
+
+
+  /* =========================
+     CAMERA KIRI
+  ========================= */
+
+  .capture-layout .camera-shell {
+    width: 100%;
+    max-width: none;
+
+    margin: 0;
+
+    /* kamera tidak terlalu tinggi */
+    aspect-ratio: 4 / 3;
+
+    border-radius: 5px;
+
+    overflow: hidden;
+  }
+
+  .capture-layout .camera-shell video {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+  }
+
+
+  /* =========================
+     RESULTS KANAN
+  ========================= */
+
+  .capture-layout .shots-row {
+    width: 72px;
+
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    gap: 5px;
+  }
+
+  .capture-layout .shot-wrapper {
+    width: 72px;
+
+    margin: 0;
+  }
+
+  .capture-layout .shot-preview {
+    width: 72px;
+    height: auto;
+
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+  }
+
+  .capture-layout .shot-preview img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+  }
+
+  /* tulisan WAITING/CAPTURED
+     terlalu makan tempat di HP */
+  .capture-layout .shot-wrapper p {
+    display: none;
+  }
+
+
+  /* =========================
+     BUTTON
+  ========================= */
+
+  .booth-actions {
+    width: calc(100% - 32px);
+    max-width: 340px;
+
+    margin: 16px auto 0;
+    padding: 0;
+  }
+
+  .shutter-button,
+  .finish-button {
+    width: 100%;
+    min-width: 0;
+
+    padding: 11px 16px;
+  }
+
+
+  /* =========================
+     FRAME NAME
+  ========================= */
+
+  .current-frame {
+    margin-top: 14px;
+
+    justify-content: center;
+  }
+
+
+  /* =========================
+     VIEWFINDER
+  ========================= */
+
+  .viewfinder span {
+    width: 18px;
+    height: 18px;
+  }
+
+  .vf-tl {
+    top: 10px;
+    left: 10px;
+  }
+
+  .vf-tr {
+    top: 10px;
+    right: 10px;
+  }
+
+  .vf-bl {
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .vf-br {
+    right: 10px;
+    bottom: 10px;
+  }
+
+
+  /* =========================
+     COUNTDOWN
+  ========================= */
+
+  .countdown-overlay > span {
+    font-size: 80px;
+  }
+}
+@media (max-width: 650px) {
+
+  /* Overlay setelah 3 foto selesai */
+  .complete-overlay {
+    padding: 10px;
+  }
+
+  .complete-check {
+    width: 32px;
+    height: 32px;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+  }
+
+  .complete-overlay h2 {
+    margin: 0;
+
+    font-size: 20px;
+    line-height: 1.05;
+  }
+
+  .complete-overlay p {
+    margin-top: 6px;
+
+    font-size: 7px;
+    line-height: 1.3;
+  }
+}
