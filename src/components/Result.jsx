@@ -111,9 +111,7 @@ const frameConfigs = {
   13: {
     width: 1080,
     height: 1350,
-    slots: [
-      { x: 540, y: 379, width: 432, height: 592 },
-    ],
+    slots: [{ x: 540, y: 379, width: 432, height: 592 }],
   },
 
   /* =====================================================
@@ -211,17 +209,13 @@ const frameConfigs = {
    RESULT
 ========================================================= */
 
-function Result({
-  selectedFrame,
-  photos,
-  onRetake,
-  onHome,
-}) {
+function Result({ selectedFrame, photos, onRetake, onHome }) {
   const canvasRef = useRef(null);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
 
+  const [selectedFilter, setSelectedFilter] = useState("original");
   /* =====================================================
      LOAD IMAGE
   ===================================================== */
@@ -233,34 +227,45 @@ function Result({
       image.onload = () => resolve(image);
 
       image.onerror = () => {
-        reject(
-          new Error(`Gagal load image: ${src}`)
-        );
+        reject(new Error(`Gagal load image: ${src}`));
       };
 
       image.src = src;
     });
   };
+  /* =====================================================
+   PHOTO FILTER
+===================================================== */
 
+  const applyPhotoFilter = (ctx) => {
+    switch (selectedFilter) {
+      case "bw":
+        ctx.filter = "grayscale(100%)";
+        break;
+
+      case "sepia":
+        ctx.filter = "sepia(85%) saturate(90%) contrast(95%)";
+        break;
+
+      case "vintage":
+        ctx.filter = "sepia(35%) saturate(75%) contrast(92%) brightness(105%)";
+        break;
+
+      default:
+        ctx.filter = "none";
+        break;
+    }
+  };
   /* =====================================================
      DRAW COVER
   ===================================================== */
 
-  const drawCover = (
-    ctx,
-    image,
-    x,
-    y,
-    width,
-    height
-  ) => {
+  const drawCover = (ctx, image, x, y, width, height) => {
     if (!image) return;
 
-    const imageRatio =
-      image.width / image.height;
+    const imageRatio = image.width / image.height;
 
-    const slotRatio =
-      width / height;
+    const slotRatio = width / height;
 
     let sourceX = 0;
     let sourceY = 0;
@@ -271,20 +276,24 @@ function Result({
     if (imageRatio > slotRatio) {
       sourceHeight = image.height;
 
-      sourceWidth =
-        sourceHeight * slotRatio;
+      sourceWidth = sourceHeight * slotRatio;
 
-      sourceX =
-        (image.width - sourceWidth) / 2;
+      sourceX = (image.width - sourceWidth) / 2;
     } else {
       sourceWidth = image.width;
 
-      sourceHeight =
-        sourceWidth / slotRatio;
+      sourceHeight = sourceWidth / slotRatio;
 
-      sourceY =
-        (image.height - sourceHeight) / 2;
+      sourceY = (image.height - sourceHeight) / 2;
     }
+
+    /* ===============================
+     FILTER HANYA UNTUK FOTO
+  =============================== */
+
+    ctx.save();
+
+    applyPhotoFilter(ctx);
 
     ctx.drawImage(
       image,
@@ -295,8 +304,10 @@ function Result({
       x,
       y,
       width,
-      height
+      height,
     );
+
+    ctx.restore();
   };
 
   /* =====================================================
@@ -317,124 +328,75 @@ function Result({
    - semua foto benar-benar satu garis
 ===================================================== */
 
-const drawCleanPhotoStrip = (
-  ctx,
-  stripPhotos,
-  centerX,
-  topY,
-  rotation
-) => {
-  const stripWidth = 202;
+  const drawCleanPhotoStrip = (ctx, stripPhotos, centerX, topY, rotation) => {
+    const stripWidth = 202;
 
-  const sidePadding = 11;
-  const topPadding = 12;
-  const bottomPadding = 14;
+    const sidePadding = 11;
+    const topPadding = 12;
+    const bottomPadding = 14;
 
-  const gap = 10;
+    const gap = 10;
 
-  const photoWidth =
-    stripWidth - sidePadding * 2;
+    const photoWidth = stripWidth - sidePadding * 2;
 
-  const photoHeight = 230;
+    const photoHeight = 230;
 
-  const stripHeight =
-    topPadding +
-    photoHeight * 4 +
-    gap * 3 +
-    bottomPadding;
+    const stripHeight = topPadding + photoHeight * 4 + gap * 3 + bottomPadding;
 
-  ctx.save();
+    ctx.save();
 
-  /* pindahkan titik canvas ke posisi strip */
-  ctx.translate(centerX, topY);
+    /* pindahkan titik canvas ke posisi strip */
+    ctx.translate(centerX, topY);
 
-  /* putar SELURUH strip sekaligus */
-  ctx.rotate(
-    (rotation * Math.PI) / 180
-  );
+    /* putar SELURUH strip sekaligus */
+    ctx.rotate((rotation * Math.PI) / 180);
 
-  /* ===============================
+    /* ===============================
      KERTAS PUTIH
   =============================== */
 
-  ctx.fillStyle = "#fffdf8";
+    ctx.fillStyle = "#fffdf8";
 
-  ctx.fillRect(
-    -stripWidth / 2,
-    0,
-    stripWidth,
-    stripHeight
-  );
+    ctx.fillRect(-stripWidth / 2, 0, stripWidth, stripHeight);
 
-  /* ===============================
+    /* ===============================
      4 FOTO
   =============================== */
 
-  stripPhotos.forEach((photo, index) => {
-    if (!photo) return;
+    stripPhotos.forEach((photo, index) => {
+      if (!photo) return;
 
-    const x =
-      -stripWidth / 2 +
-      sidePadding;
+      const x = -stripWidth / 2 + sidePadding;
 
-    const y =
-      topPadding +
-      index *
-        (photoHeight + gap);
+      const y = topPadding + index * (photoHeight + gap);
 
-    drawCover(
-      ctx,
-      photo,
-      x,
-      y,
-      photoWidth,
-      photoHeight
-    );
-  });
+      drawCover(ctx, photo, x, y, photoWidth, photoHeight);
+    });
 
-  ctx.restore();
-};
+    ctx.restore();
+  };
   /* =====================================================
      FRAME 14 - BLOOMING
 
      DIPERTAHANKAN SESUAI FILE-MU.
   ===================================================== */
 
-  const renderBlooming = (
-    ctx,
-    loadedPhotos
-  ) => {
+  const renderBlooming = (ctx, loadedPhotos) => {
     if (loadedPhotos.length < 4) {
-      throw new Error(
-        "Frame 14 membutuhkan 4 foto."
-      );
+      throw new Error("Frame 14 membutuhkan 4 foto.");
     }
 
     /* =========================================
        FOTO 1 - BACKGROUND ATAS
     ========================================= */
 
-    drawCover(
-      ctx,
-      loadedPhotos[0],
-      0,
-      0,
-      1080,
-      675
-    );
+    drawCover(ctx, loadedPhotos[0], 0, 0, 1080, 675);
 
     /* =========================================
        FOTO 3 - BACKGROUND BAWAH
     ========================================= */
 
-    drawCover(
-      ctx,
-      loadedPhotos[2],
-      0,
-      675,
-      1080,
-      675
-    );
+    drawCover(ctx, loadedPhotos[2], 0, 675, 1080, 675);
 
     /* =========================================
        FOTO 2 - KECIL ATAS
@@ -448,21 +410,9 @@ const drawCleanPhotoStrip = (
 
     ctx.fillStyle = "#f5dfdf";
 
-    ctx.fillRect(
-      topX - 18,
-      topY - 18,
-      smallWidth + 36,
-      smallHeight + 36
-    );
+    ctx.fillRect(topX - 18, topY - 18, smallWidth + 36, smallHeight + 36);
 
-    drawCover(
-      ctx,
-      loadedPhotos[1],
-      topX,
-      topY,
-      smallWidth,
-      smallHeight
-    );
+    drawCover(ctx, loadedPhotos[1], topX, topY, smallWidth, smallHeight);
 
     /* =========================================
        FOTO 4 - KECIL BAWAH
@@ -473,42 +423,23 @@ const drawCleanPhotoStrip = (
 
     ctx.fillStyle = "#f5dfdf";
 
-    ctx.fillRect(
-      bottomX - 18,
-      bottomY - 18,
-      smallWidth + 36,
-      smallHeight + 36
-    );
+    ctx.fillRect(bottomX - 18, bottomY - 18, smallWidth + 36, smallHeight + 36);
 
-    drawCover(
-      ctx,
-      loadedPhotos[3],
-      bottomX,
-      bottomY,
-      smallWidth,
-      smallHeight
-    );
+    drawCover(ctx, loadedPhotos[3], bottomX, bottomY, smallWidth, smallHeight);
 
     /* =========================================
        GARIS TENGAH
     ========================================= */
 
-    ctx.strokeStyle =
-      "rgba(255,255,255,0.75)";
+    ctx.strokeStyle = "rgba(255,255,255,0.75)";
 
     ctx.lineWidth = 2;
 
     ctx.beginPath();
 
-    ctx.moveTo(
-      0,
-      675
-    );
+    ctx.moveTo(0, 675);
 
-    ctx.lineTo(
-      1080,
-      675
-    );
+    ctx.lineTo(1080, 675);
 
     ctx.stroke();
 
@@ -522,14 +453,9 @@ const drawCleanPhotoStrip = (
 
     ctx.textAlign = "right";
 
-    ctx.font =
-      "italic 30px Georgia, serif";
+    ctx.font = "italic 30px Georgia, serif";
 
-    ctx.fillText(
-      "postcards",
-      990,
-      1180
-    );
+    ctx.fillText("postcards", 990, 1180);
 
     ctx.restore();
   };
@@ -548,30 +474,18 @@ const drawCleanPhotoStrip = (
    KANAN = foto 2, 4, 6, 8
 ===================================================== */
 
-const renderEnvelope = (
-  ctx,
-  frame,
-  loadedPhotos
-) => {
-  if (loadedPhotos.length < 8) {
-    throw new Error(
-      "Frame 15 dan 16 membutuhkan 8 foto."
-    );
-  }
+  const renderEnvelope = (ctx, frame, loadedPhotos) => {
+    if (loadedPhotos.length < 8) {
+      throw new Error("Frame 15 dan 16 membutuhkan 8 foto.");
+    }
 
-  /* =========================================
+    /* =========================================
      1. TEMPLATE DASAR
   ========================================= */
 
-  ctx.drawImage(
-    frame,
-    0,
-    0,
-    1080,
-    1350
-  );
+    ctx.drawImage(frame, 0, 0, 1080, 1350);
 
-  /* =========================================
+    /* =========================================
      2. PHOTO STRIP KIRI
 
      FOTO:
@@ -583,22 +497,17 @@ const renderEnvelope = (
      Semua dibuat sebagai SATU strip.
   ========================================= */
 
-  drawCleanPhotoStrip(
-    ctx,
+    drawCleanPhotoStrip(
+      ctx,
 
-    [
-      loadedPhotos[0],
-      loadedPhotos[2],
-      loadedPhotos[4],
-      loadedPhotos[6],
-    ],
+      [loadedPhotos[0], loadedPhotos[2], loadedPhotos[4], loadedPhotos[6]],
 
-    405,  // X
-    105,  // Y atas strip
-    -7    // rotasi
-  );
+      405, // X
+      105, // Y atas strip
+      -7, // rotasi
+    );
 
-  /* =========================================
+    /* =========================================
      3. PHOTO STRIP KANAN
 
      FOTO:
@@ -608,100 +517,63 @@ const renderEnvelope = (
      8
   ========================================= */
 
-  drawCleanPhotoStrip(
-    ctx,
+    drawCleanPhotoStrip(
+      ctx,
 
-    [
-      loadedPhotos[1],
-      loadedPhotos[3],
-      loadedPhotos[5],
-      loadedPhotos[7],
-    ],
+      [loadedPhotos[1], loadedPhotos[3], loadedPhotos[5], loadedPhotos[7]],
 
-    625, // X
-    105, // Y atas strip
-    6    // rotasi
-  );
+      625, // X
+      105, // Y atas strip
+      6, // rotasi
+    );
 
-  /* =========================================
+    /* =========================================
      4. DEPAN AMPLOP
 
      Digambar kembali supaya bagian bawah
      kedua strip terlihat masuk ke amplop.
   ========================================= */
 
-  ctx.save();
+    ctx.save();
 
-  ctx.beginPath();
+    ctx.beginPath();
 
-  ctx.moveTo(
-    245,
-    850
-  );
+    ctx.moveTo(245, 850);
 
-  ctx.lineTo(
-    540,
-    1035
-  );
+    ctx.lineTo(540, 1035);
 
-  ctx.lineTo(
-    805,
-    850
-  );
+    ctx.lineTo(805, 850);
 
-  ctx.lineTo(
-    775,
-    1245
-  );
+    ctx.lineTo(775, 1245);
 
-  ctx.lineTo(
-    245,
-    1200
-  );
+    ctx.lineTo(245, 1200);
 
-  ctx.closePath();
+    ctx.closePath();
 
-  ctx.clip();
+    ctx.clip();
 
-  ctx.drawImage(
-    frame,
-    0,
-    0,
-    1080,
-    1350
-  );
+    ctx.drawImage(frame, 0, 0, 1080, 1350);
 
-  ctx.restore();
+    ctx.restore();
 
-  /* =========================================
+    /* =========================================
      5. NOTE + WAX
 
      Tetap paling depan.
   ========================================= */
 
-  ctx.save();
+    ctx.save();
 
-  ctx.beginPath();
+    ctx.beginPath();
 
-  ctx.rect(
-    650,
-    790,
-    430,
-    560
-  );
+    ctx.rect(650, 790, 430, 560);
 
-  ctx.clip();
+    ctx.clip();
 
-  ctx.drawImage(
-    frame,
-    0,
-    0,
-    1080,
-    1350
-  );
+    ctx.drawImage(frame, 0, 0, 1080, 1350);
 
-  ctx.restore();
-};
+    ctx.restore();
+  };
 
   /* =====================================================
      CREATE RESULT
@@ -712,80 +584,54 @@ const renderEnvelope = (
       setReady(false);
       setError("");
 
-      const canvas =
-        canvasRef.current;
+      const canvas = canvasRef.current;
 
       if (!canvas) {
         return;
       }
 
-      const ctx =
-        canvas.getContext("2d");
+      const ctx = canvas.getContext("2d");
 
-      const config =
-        frameConfigs[
-          selectedFrame.id
-        ];
+      const config = frameConfigs[selectedFrame.id];
 
       if (!config) {
-        throw new Error(
-          `Frame ${selectedFrame.id} belum punya config.`
-        );
+        throw new Error(`Frame ${selectedFrame.id} belum punya config.`);
       }
 
       /* =========================================
          CANVAS SIZE
       ========================================= */
 
-      canvas.width =
-        config.width;
+      canvas.width = config.width;
 
-      canvas.height =
-        config.height;
+      canvas.height = config.height;
 
       /* =========================================
          LOAD FRAME
       ========================================= */
 
-      const frame =
-        await loadImage(
-          selectedFrame.image
-        );
+      const frame = await loadImage(selectedFrame.image);
 
       /* =========================================
          LOAD PHOTOS
       ========================================= */
 
-      const loadedPhotos =
-        await Promise.all(
-          photos.map(
-            (photo) =>
-              loadImage(photo)
-          )
-        );
+      const loadedPhotos = await Promise.all(
+        photos.map((photo) => loadImage(photo)),
+      );
 
       /* =========================================
          CLEAR CANVAS
       ========================================= */
 
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       /* =================================================
          FRAME 14 - BLOOMING
       ================================================= */
 
-      if (
-        selectedFrame.id === 14
-      ) {
-        renderBlooming(
-          ctx,
-          loadedPhotos
-        );
+      if (selectedFrame.id === 14) {
+        renderBlooming(ctx, loadedPhotos);
 
         setReady(true);
 
@@ -796,15 +642,8 @@ const renderEnvelope = (
          FRAME 15 & 16 - ENVELOPE
       ================================================= */
 
-      if (
-        selectedFrame.id === 15 ||
-        selectedFrame.id === 16
-      ) {
-        renderEnvelope(
-          ctx,
-          frame,
-          loadedPhotos
-        );
+      if (selectedFrame.id === 15 || selectedFrame.id === 16) {
+        renderEnvelope(ctx, frame, loadedPhotos);
 
         setReady(true);
 
@@ -815,44 +654,24 @@ const renderEnvelope = (
          FRAME NORMAL
       ================================================= */
 
-      ctx.drawImage(
-        frame,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+      ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 
-      loadedPhotos.forEach(
-        (photo, index) => {
-          const slot =
-            config.slots?.[index];
+      loadedPhotos.forEach((photo, index) => {
+        const slot = config.slots?.[index];
 
-          if (!slot) {
-            return;
-          }
-
-          drawCover(
-            ctx,
-            photo,
-            slot.x,
-            slot.y,
-            slot.width,
-            slot.height
-          );
+        if (!slot) {
+          return;
         }
-      );
+
+        drawCover(ctx, photo, slot.x, slot.y, slot.width, slot.height);
+      });
 
       setReady(true);
     } catch (err) {
-      console.error(
-        "CREATE RESULT ERROR:",
-        err
-      );
+      console.error("CREATE RESULT ERROR:", err);
 
       setError(
-        err?.message ||
-          "Something went wrong while creating your photo."
+        err?.message || "Something went wrong while creating your photo.",
       );
     }
   };
@@ -862,28 +681,20 @@ const renderEnvelope = (
   ===================================================== */
 
   useEffect(() => {
-    if (
-      !selectedFrame ||
-      !photos?.length
-    ) {
+    if (!selectedFrame || !photos?.length) {
       return;
     }
 
     createResult();
-  }, [selectedFrame, photos]);
-
+  }, [selectedFrame, photos, selectedFilter]);
   /* =====================================================
      DOWNLOAD
   ===================================================== */
 
   const download = () => {
-    const canvas =
-      canvasRef.current;
+    const canvas = canvasRef.current;
 
-    if (
-      !canvas ||
-      !ready
-    ) {
+    if (!canvas || !ready) {
       return;
     }
 
@@ -893,42 +704,28 @@ const renderEnvelope = (
           return;
         }
 
-        const url =
-          URL.createObjectURL(
-            blob
-          );
+        const url = URL.createObjectURL(blob);
 
-        const link =
-          document.createElement(
-            "a"
-          );
+        const link = document.createElement("a");
 
         link.href = url;
 
-        link.download =
-          `snapbooth-${selectedFrame.name
-            .toLowerCase()
-            .replaceAll(
-              " ",
-              "-"
-            )}-${Date.now()}.png`;
+        link.download = `snapbooth-${selectedFrame.name
+          .toLowerCase()
+          .replaceAll(" ", "-")}-${Date.now()}.png`;
 
-        document.body.appendChild(
-          link
-        );
+        document.body.appendChild(link);
 
         link.click();
 
         link.remove();
 
-        URL.revokeObjectURL(
-          url
-        );
+        URL.revokeObjectURL(url);
       },
 
       "image/png",
 
-      1
+      1,
     );
   };
 
@@ -936,9 +733,7 @@ const renderEnvelope = (
      PHOTO COUNT
   ===================================================== */
 
-  const photoCount =
-    selectedFrame?.photoCount ||
-    photos.length;
+  const photoCount = selectedFrame?.photoCount || photos.length;
 
   /* =====================================================
      UI
@@ -946,42 +741,24 @@ const renderEnvelope = (
 
   return (
     <main className="final-page">
-
       {/* =================================================
           HEADER
       ================================================= */}
 
       <header className="final-header">
-
-        <button
-          className="text-button"
-          onClick={onHome}
-        >
+        <button className="text-button" onClick={onHome}>
           ← Home
         </button>
 
-        <div className="final-logo">
-          SNAPBOOTH
-        </div>
+        <div className="final-logo">SNAPBOOTH</div>
 
         <span>
-          {String(
-            photoCount
-          ).padStart(
-            2,
-            "0"
-          )}
+          {String(photoCount).padStart(2, "0")}
 
           {" / "}
 
-          {String(
-            photoCount
-          ).padStart(
-            2,
-            "0"
-          )}
+          {String(photoCount).padStart(2, "0")}
         </span>
-
       </header>
 
       {/* =================================================
@@ -989,70 +766,47 @@ const renderEnvelope = (
       ================================================= */}
 
       <section className="final-container">
-
         {/* TITLE */}
 
         <div className="final-title">
-
-          <span>
-            ✦ ALL DONE ✦
-          </span>
+          <span>✦ ALL DONE ✦</span>
 
           <h1>
             Your memory is
             <em> ready.</em>
           </h1>
 
-          <p>
-            Save it somewhere special.
-          </p>
-
+          <p>Save it somewhere special.</p>
         </div>
 
         {/* GRID */}
 
         <div className="final-grid">
-
           {/* =============================================
               RESULT
           ============================================= */}
 
           <div className="photostrip-area">
-
             {/* ERROR */}
 
-            {error && (
-              <div className="result-error">
-                {error}
-              </div>
-            )}
+            {error && <div className="result-error">{error}</div>}
 
             {/* LOADING */}
 
-            {!ready &&
-              !error && (
-                <div className="result-loader">
+            {!ready && !error && (
+              <div className="result-loader">
+                <div className="loader-circle" />
 
-                  <div className="loader-circle" />
-
-                  <p>
-                    Creating your photo...
-                  </p>
-
-                </div>
-              )}
+                <p>Creating your photo...</p>
+              </div>
+            )}
 
             {/* CANVAS */}
 
             <canvas
               ref={canvasRef}
-              className={`result-canvas ${
-                ready
-                  ? "show"
-                  : ""
-              }`}
+              className={`result-canvas ${ready ? "show" : ""}`}
             />
-
           </div>
 
           {/* =============================================
@@ -1060,27 +814,66 @@ const renderEnvelope = (
           ============================================= */}
 
           <aside className="download-panel">
+            <span className="panel-label">YOUR FRAME</span>
 
-            <span className="panel-label">
-              YOUR FRAME
-            </span>
-
-            <h2>
-              {selectedFrame.name}
-            </h2>
+            <h2>{selectedFrame.name}</h2>
 
             <p>
               {photoCount}{" "}
-
-              {photoCount === 1
-                ? "little moment"
-                : "little moments"}
-
-              , captured forever.
+              {photoCount === 1 ? "little moment" : "little moments"}, captured
+              forever.
             </p>
 
             <div className="panel-line" />
+            {/* =============================================
+    FILTER
+============================================= */}
 
+            <div className="filter-section">
+              <span className="filter-label">PHOTO FILTER</span>
+
+              <div className="filter-options">
+                <button
+                  type="button"
+                  className={`filter-button ${
+                    selectedFilter === "original" ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedFilter("original")}
+                >
+                  Original
+                </button>
+
+                <button
+                  type="button"
+                  className={`filter-button ${
+                    selectedFilter === "bw" ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedFilter("bw")}
+                >
+                  B&W
+                </button>
+
+                <button
+                  type="button"
+                  className={`filter-button ${
+                    selectedFilter === "sepia" ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedFilter("sepia")}
+                >
+                  Sepia
+                </button>
+
+                <button
+                  type="button"
+                  className={`filter-button ${
+                    selectedFilter === "vintage" ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedFilter("vintage")}
+                >
+                  Vintage
+                </button>
+              </div>
+            </div>
             {/* DOWNLOAD */}
 
             <button
@@ -1089,36 +882,23 @@ const renderEnvelope = (
               disabled={!ready}
             >
               DOWNLOAD PHOTO
-
-              <span>
-                ↓
-              </span>
+              <span>↓</span>
             </button>
 
             {/* RETAKE */}
 
-            <button
-              className="secondary-action"
-              onClick={onRetake}
-            >
+            <button className="secondary-action" onClick={onRetake}>
               ↻ Retake photos
             </button>
 
             {/* CHANGE FRAME */}
 
-            <button
-              className="secondary-action"
-              onClick={onHome}
-            >
+            <button className="secondary-action" onClick={onHome}>
               Change frame
             </button>
-
           </aside>
-
         </div>
-
       </section>
-
     </main>
   );
 }

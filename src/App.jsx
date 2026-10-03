@@ -97,25 +97,15 @@ const frames = [
   {
     id: 15,
     name: "Birthday Letter",
-
-    // dipakai Result.jsx
     image: "/frames/frame15.png",
-
-    // cuma untuk tampilan pilihan frame
     preview: "/frames/frame15-preview.png",
-
     photoCount: 8,
   },
   {
     id: 16,
     name: "My Love Letter",
-
-    // dipakai Result.jsx
     image: "/frames/frame16.png",
-
-    // cuma untuk tampilan pilihan frame
     preview: "/frames/frame16-preview.png",
-
     photoCount: 8,
   },
   {
@@ -200,7 +190,9 @@ function App() {
   return (
     <main className="home-page">
       <section className="home-hero">
-        <p className="eyebrow">✦ YOUR LITTLE PHOTOBOOTH ✦</p>
+        <p className="eyebrow">
+          ✦ YOUR LITTLE PHOTOBOOTH ✦
+        </p>
 
         <h1>
           Capture your
@@ -221,19 +213,34 @@ function App() {
 
         <div className="frame-grid">
           {frames.map((frame) => {
-            const active = selectedFrame?.id === frame.id;
+            const active =
+              selectedFrame?.id === frame.id;
 
             return (
               <button
                 key={frame.id}
                 type="button"
-                className={`frame-option ${active ? "active" : ""}`}
-                onClick={() => setSelectedFrame(frame)}
+                className={`frame-option ${
+                  active ? "active" : ""
+                }`}
+                onClick={() =>
+                  setSelectedFrame(frame)
+                }
               >
                 <div className="frame-image-wrapper">
-                  <img src={frame.preview || frame.image} alt={frame.name} />
+                  <img
+                    src={
+                      frame.preview ||
+                      frame.image
+                    }
+                    alt={frame.name}
+                  />
 
-                  {active && <div className="selected-badge">✓</div>}
+                  {active && (
+                    <div className="selected-badge">
+                      ✓
+                    </div>
+                  )}
                 </div>
 
                 <div className="frame-option-footer">
@@ -242,8 +249,13 @@ function App() {
                   <span>
                     {active
                       ? "Selected"
-                      : `${frame.photoCount} Photo${
-                          frame.photoCount > 1 ? "s" : ""
+                      : `${
+                          frame.photoCount
+                        } Photo${
+                          frame.photoCount >
+                          1
+                            ? "s"
+                            : ""
                         }`}
                   </span>
                 </div>
@@ -255,8 +267,15 @@ function App() {
         <div className="start-area">
           <p>
             {selectedFrame
-              ? `${selectedFrame.name} · ${selectedFrame.photoCount} photo${
-                  selectedFrame.photoCount > 1 ? "s" : ""
+              ? `${
+                  selectedFrame.name
+                } · ${
+                  selectedFrame.photoCount
+                } photo${
+                  selectedFrame.photoCount >
+                  1
+                    ? "s"
+                    : ""
                 }`
               : "Choose one frame to continue"}
           </p>

@@ -1650,3 +1650,70 @@ a {
     margin: 4px auto 0;
   }
 }
+
+/* =========================================
+   RESULT FILTER
+========================================= */
+
+.filter-section {
+  margin-bottom: 22px;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 10px;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  color: #8d7668;
+}
+
+.filter-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.filter-button {
+  border: 1px solid #d8cabf;
+  background: transparent;
+
+  padding: 10px 8px;
+
+  border-radius: 999px;
+
+  font-family: inherit;
+  font-size: 12px;
+
+  color: #49382e;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.filter-button:hover {
+  border-color: #171714;
+}
+
+.filter-button.active {
+  background: #171714;
+  color: #ffffff;
+  border-color: #171714;
+}
+
+@media (max-width: 600px) {
+  .filter-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-button {
+    padding: 9px 6px;
+    font-size: 11px;
+  }
+}
