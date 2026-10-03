@@ -1,6 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-function Camera({ selectedFrame, onBack, onFinish }) {
+function Camera({
+  selectedFrame,
+  onBack,
+  onFinish,
+}) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -8,8 +16,15 @@ function Camera({ selectedFrame, onBack, onFinish }) {
 
   const [photos, setPhotos] = useState([]);
   const [countdown, setCountdown] = useState(null);
-  const [isCounting, setIsCounting] = useState(false);
-  const [cameraError, setCameraError] = useState("");
+  const [isCounting, setIsCounting] =
+    useState(false);
+  const [cameraError, setCameraError] =
+    useState("");
+
+  // Jumlah foto mengikuti frame yang dipilih
+  // Frame lama yang belum punya photoCount otomatis 3
+  const photoCount =
+    selectedFrame?.photoCount || 3;
 
   // ==============================
   // START CAMERA
@@ -27,24 +42,24 @@ function Camera({ selectedFrame, onBack, onFinish }) {
     try {
       setCameraError("");
 
-      // Matikan stream lama kalau ada
       stopCamera();
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
 
-          width: {
-            ideal: 1280,
+            width: {
+              ideal: 1280,
+            },
+
+            height: {
+              ideal: 960,
+            },
           },
 
-          height: {
-            ideal: 960,
-          },
-        },
-
-        audio: false,
-      });
+          audio: false,
+        });
 
       streamRef.current = stream;
 
@@ -57,7 +72,7 @@ function Camera({ selectedFrame, onBack, onFinish }) {
       console.error("Camera error:", error);
 
       setCameraError(
-        "We couldn't access your camera. Please allow camera permission and try again.",
+        "We couldn't access your camera. Please allow camera permission and try again."
       );
     }
   };
@@ -69,9 +84,11 @@ function Camera({ selectedFrame, onBack, onFinish }) {
   const stopCamera = () => {
     if (!streamRef.current) return;
 
-    streamRef.current.getTracks().forEach((track) => {
-      track.stop();
-    });
+    streamRef.current
+      .getTracks()
+      .forEach((track) => {
+        track.stop();
+      });
 
     streamRef.current = null;
   };
@@ -101,32 +118,40 @@ function Camera({ selectedFrame, onBack, onFinish }) {
 
     if (!ctx) return;
 
-    /*
-      Mirror hasil foto.
-
-      Preview kamera menggunakan mirror,
-      jadi hasil fotonya juga dibuat sama
-      seperti yang dilihat user.
-    */
-
+    // Mirror hasil foto agar sama
+    // seperti preview kamera
     ctx.save();
 
     ctx.translate(width, 0);
     ctx.scale(-1, 1);
 
-    ctx.drawImage(video, 0, 0, width, height);
+    ctx.drawImage(
+      video,
+      0,
+      0,
+      width,
+      height
+    );
 
     ctx.restore();
 
-    const image = canvas.toDataURL("image/jpeg", 0.95);
+    const image =
+      canvas.toDataURL(
+        "image/jpeg",
+        0.95
+      );
 
     setPhotos((previousPhotos) => {
-      // Maksimal 3 foto
-      if (previousPhotos.length >= 3) {
+      if (
+        previousPhotos.length >= photoCount
+      ) {
         return previousPhotos;
       }
 
-      return [...previousPhotos, image];
+      return [
+        ...previousPhotos,
+        image,
+      ];
     });
   };
 
@@ -135,12 +160,15 @@ function Camera({ selectedFrame, onBack, onFinish }) {
   // ==============================
 
   const takePhoto = () => {
-    if (isCounting || photos.length >= 3 || cameraError) {
+    if (
+      isCounting ||
+      photos.length >= photoCount ||
+      cameraError
+    ) {
       return;
     }
 
     setIsCounting(true);
-
     setCountdown(3);
 
     let number = 3;
@@ -156,9 +184,7 @@ function Camera({ selectedFrame, onBack, onFinish }) {
       clearInterval(timer);
 
       setCountdown(null);
-
       capturePhoto();
-
       setIsCounting(false);
     }, 1000);
   };
@@ -171,12 +197,15 @@ function Camera({ selectedFrame, onBack, onFinish }) {
     if (isCounting) return;
 
     setPhotos((previousPhotos) =>
-      previousPhotos.filter((_, currentIndex) => currentIndex !== index),
+      previousPhotos.filter(
+        (_, currentIndex) =>
+          currentIndex !== index
+      )
     );
   };
 
   // ==============================
-  // RESET ALL PHOTOS
+  // RESET
   // ==============================
 
   const resetPhotos = () => {
@@ -191,7 +220,11 @@ function Camera({ selectedFrame, onBack, onFinish }) {
   // ==============================
 
   const finish = () => {
-    if (photos.length !== 3) return;
+    if (
+      photos.length !== photoCount
+    ) {
+      return;
+    }
 
     stopCamera();
 
@@ -204,48 +237,73 @@ function Camera({ selectedFrame, onBack, onFinish }) {
 
   const handleBack = () => {
     stopCamera();
-
     onBack();
   };
 
   // ==============================
-  // RENDER
+  // GALLERY
   // ==============================
-  const handleGalleryUpload = (event) => {
-    const files = Array.from(event.target.files);
+
+  const handleGalleryUpload = (
+    event
+  ) => {
+    const files = Array.from(
+      event.target.files || []
+    );
 
     if (!files.length) return;
 
-    // Slot yang masih tersedia
-    const remainingSlots = 3 - photos.length;
+    const remainingSlots =
+      photoCount - photos.length;
 
-    const selectedFiles = files.slice(0, remainingSlots);
+    const selectedFiles =
+      files.slice(0, remainingSlots);
 
     selectedFiles.forEach((file) => {
-      if (!file.type.startsWith("image/")) {
+      if (
+        !file.type.startsWith("image/")
+      ) {
         return;
       }
 
-      const reader = new FileReader();
+      const reader =
+        new FileReader();
 
       reader.onload = (e) => {
         setPhotos((previous) => {
-          if (previous.length >= 3) {
+          if (
+            previous.length >= photoCount
+          ) {
             return previous;
           }
 
-          return [...previous, e.target.result];
+          return [
+            ...previous,
+            e.target.result,
+          ];
         });
       };
 
       reader.readAsDataURL(file);
     });
 
-    // supaya file yang sama bisa dipilih lagi
+    // Biar file yang sama bisa
+    // dipilih lagi
     event.target.value = "";
   };
+
+  // ==============================
+  // COUNTER
+  // ==============================
+
+  const currentNumber =
+    photos.length >= photoCount
+      ? photoCount
+      : photos.length + 1;
+
   return (
     <main className="booth-page">
+
       {/* ==========================
           HEADER
       ========================== */}
@@ -259,12 +317,21 @@ function Camera({ selectedFrame, onBack, onFinish }) {
           ← Choose frame
         </button>
 
-        <div className="booth-logo">SNAPBOOTH</div>
+        <div className="booth-logo">
+          SNAPBOOTH
+        </div>
 
         <div className="photo-counter">
-          {String(Math.min(photos.length + 1, 3)).padStart(2, "0")}
+          {String(
+            currentNumber
+          ).padStart(2, "0")}
 
-          <span>/ 03</span>
+          <span>
+            /{" "}
+            {String(
+              photoCount
+            ).padStart(2, "0")}
+          </span>
         </div>
       </header>
 
@@ -273,6 +340,7 @@ function Camera({ selectedFrame, onBack, onFinish }) {
       ========================== */}
 
       <section className="booth-container">
+
         {/* TITLE */}
 
         <div className="booth-intro">
@@ -283,35 +351,39 @@ function Camera({ selectedFrame, onBack, onFinish }) {
             <em> look cute.</em>
           </h1>
 
-          <p>Three photos. Three poses. One little memory.</p>
+          <p>
+            {photoCount}{" "}
+            {photoCount === 1
+              ? "photo"
+              : "photos"}
+            . Strike your best pose.
+          </p>
         </div>
 
-        {/* ==================================
-            CAMERA + PHOTO RESULTS
-
-            Desktop:
-            CSS bisa tetap seperti sebelumnya.
-
-            Mobile:
-            Camera kiri
-            3 preview kanan
-        ================================== */}
+        {/* ==========================
+            CAMERA + PREVIEW
+        ========================== */}
 
         <div className="capture-layout">
-          {/* ======================
-              CAMERA
-          ====================== */}
+
+          {/* CAMERA */}
 
           <div className="camera-shell">
+
             {cameraError ? (
-              /* ERROR CAMERA */
-
               <div className="camera-error-state">
-                <div className="error-icon">!</div>
 
-                <h3>Camera unavailable</h3>
+                <div className="error-icon">
+                  !
+                </div>
 
-                <p>{cameraError}</p>
+                <h3>
+                  Camera unavailable
+                </h3>
+
+                <p>
+                  {cameraError}
+                </p>
 
                 <button
                   type="button"
@@ -320,12 +392,17 @@ function Camera({ selectedFrame, onBack, onFinish }) {
                 >
                   TRY AGAIN
                 </button>
+
               </div>
             ) : (
               <>
-                {/* LIVE CAMERA */}
 
-                <video ref={videoRef} autoPlay playsInline muted />
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                />
 
                 {/* VIEWFINDER */}
 
@@ -336,7 +413,7 @@ function Camera({ selectedFrame, onBack, onFinish }) {
                   <span className="vf-br" />
                 </div>
 
-                {/* LIVE BADGE */}
+                {/* LIVE */}
 
                 <div className="live-badge">
                   <span />
@@ -347,105 +424,189 @@ function Camera({ selectedFrame, onBack, onFinish }) {
 
                 {countdown && (
                   <div className="countdown-overlay">
-                    <span>{countdown}</span>
+                    <span>
+                      {countdown}
+                    </span>
                   </div>
                 )}
 
                 {/* COMPLETE */}
 
-                {photos.length === 3 && !isCounting && (
-                  <div className="complete-overlay">
-                    <div className="complete-check">✓</div>
+                {photos.length ===
+                  photoCount &&
+                  !isCounting && (
+                    <div className="complete-overlay">
 
-                    <h2>You look good.</h2>
+                      <div className="complete-check">
+                        ✓
+                      </div>
 
-                    <p>Your three shots are ready.</p>
-                  </div>
-                )}
+                      <h2>
+                        You look good.
+                      </h2>
+
+                      <p>
+                        Your{" "}
+                        {photoCount}{" "}
+                        {photoCount === 1
+                          ? "shot is"
+                          : "shots are"}{" "}
+                        ready.
+                      </p>
+
+                    </div>
+                  )}
+
               </>
             )}
+
           </div>
 
-          {/* ======================
-              3 PHOTO RESULTS
-          ====================== */}
+          {/* ==========================
+              PHOTO RESULTS
+          ========================== */}
 
           <div className="shots-row">
-            {[0, 1, 2].map((index) => {
-              const photo = photos[index];
+
+            {Array.from({
+              length: photoCount,
+            }).map((_, index) => {
+
+              const photo =
+                photos[index];
 
               return (
-                <div className="shot-wrapper" key={index}>
-                  <div className={`shot-preview ${photo ? "filled" : ""}`}>
+                <div
+                  className="shot-wrapper"
+                  key={index}
+                >
+
+                  <div
+                    className={`shot-preview ${
+                      photo
+                        ? "filled"
+                        : ""
+                    }`}
+                  >
+
                     {photo ? (
                       <>
-                        <img src={photo} alt={`Shot ${index + 1}`} />
+
+                        <img
+                          src={photo}
+                          alt={`Shot ${
+                            index + 1
+                          }`}
+                        />
 
                         <button
                           type="button"
                           className="remove-shot"
-                          onClick={() => removePhoto(index)}
-                          aria-label={`Remove photo ${index + 1}`}
+                          onClick={() =>
+                            removePhoto(
+                              index
+                            )
+                          }
+                          aria-label={`Remove photo ${
+                            index + 1
+                          }`}
                         >
                           ×
                         </button>
+
                       </>
                     ) : (
-                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <span>
+                        {String(
+                          index + 1
+                        ).padStart(
+                          2,
+                          "0"
+                        )}
+                      </span>
                     )}
+
                   </div>
 
-                  <p>{photo ? "Captured" : "Waiting"}</p>
+                  <p>
+                    {photo
+                      ? "Captured"
+                      : "Waiting"}
+                  </p>
+
                 </div>
               );
             })}
+
           </div>
         </div>
 
-        {/* ==========================
-            HIDDEN CANVAS
+        {/* Hidden canvas */}
 
-            Dipakai untuk mengambil
-            gambar dari video.
-        ========================== */}
-
-        <canvas ref={canvasRef} hidden />
+        <canvas
+          ref={canvasRef}
+          hidden
+        />
 
         {/* ==========================
-            ACTION BUTTON
+            ACTIONS
         ========================== */}
 
         <div className="booth-actions">
-          {/* TAKE PHOTO / CREATE PHOTO */}
 
-          {photos.length < 3 ? (
+          {photos.length <
+          photoCount ? (
+
             <button
               type="button"
               className="shutter-button"
-              disabled={isCounting || !!cameraError}
+              disabled={
+                isCounting ||
+                !!cameraError
+              }
               onClick={takePhoto}
             >
+
               <span className="shutter-icon">
                 <span />
               </span>
 
-              {isCounting ? "GET READY..." : `TAKE PHOTO ${photos.length + 1}`}
+              {isCounting
+                ? "GET READY..."
+                : `TAKE PHOTO ${
+                    photos.length +
+                    1
+                  }`}
+
             </button>
+
           ) : (
-            <button type="button" className="finish-button" onClick={finish}>
+
+            <button
+              type="button"
+              className="finish-button"
+              onClick={finish}
+            >
               CREATE MY PHOTO
               <span>→</span>
             </button>
+
           )}
 
-          {/* UPLOAD DARI GALLERY */}
+          {/* ==========================
+              GALLERY
+          ========================== */}
 
-          {photos.length < 3 && (
+          {photos.length <
+            photoCount && (
             <>
+
               <button
                 type="button"
                 className="gallery-button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
               >
                 UPLOAD FROM GALLERY
                 <span>＋</span>
@@ -457,12 +618,15 @@ function Camera({ selectedFrame, onBack, onFinish }) {
                 accept="image/*"
                 multiple
                 hidden
-                onChange={handleGalleryUpload}
+                onChange={
+                  handleGalleryUpload
+                }
               />
+
             </>
           )}
 
-          {/* START OVER */}
+          {/* RESET */}
 
           {photos.length > 0 && (
             <button
@@ -474,17 +638,26 @@ function Camera({ selectedFrame, onBack, onFinish }) {
               ↻ Start over
             </button>
           )}
+
         </div>
 
-        {/* ==========================
-            CURRENT FRAME
-        ========================== */}
+        {/* CURRENT FRAME */}
 
         <div className="current-frame">
           <span>FRAME</span>
 
-          <strong>{selectedFrame.name}</strong>
+          <strong>
+            {selectedFrame.name}
+          </strong>
+
+          <small>
+            {photoCount}{" "}
+            {photoCount === 1
+              ? "PHOTO"
+              : "PHOTOS"}
+          </small>
         </div>
+
       </section>
     </main>
   );
